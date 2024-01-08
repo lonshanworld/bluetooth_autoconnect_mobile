@@ -16,6 +16,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_bluetooth_serial_ble: ^0.5.0
+  plugin_platform_interface: ^2.0.2
+  provider: ^6.1.1
 
   bluetooth_autoconnect_mobile:
     # When depending on this package from a real application you should use:
