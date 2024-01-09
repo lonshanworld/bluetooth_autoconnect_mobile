@@ -3,6 +3,7 @@ library bluetooth_autoconnect_mobile;
 import 'dart:async';
 // "02:3F:68:29:A4:01"
 import 'package:flutter_bluetooth_serial_ble/flutter_bluetooth_serial_ble.dart';
+import 'package:geolocator/geolocator.dart';
 
 
 class BluetoothAutoconnectMobile{
@@ -47,24 +48,22 @@ class BluetoothAutoconnectMobile{
 
   Future<bool> requestPermissons()async{
     print("value of want to connect device $_autoConnectAddress");
-    if(_autoConnectAddress != null && _autoConnectAddress != ""){
-      BluetoothState state = await  FlutterBluetoothSerial.instance.state;
-      switch(state) {
-        case BluetoothState.STATE_ON :
-          return true;
-          // await _scanAndConnect(_autoConnectAddress!);
-          // break;
-        case BluetoothState.STATE_BLE_ON :
-          return true;
-          // await _scanAndConnect(_autoConnectAddress!);
-          // break;
-        default :
-          return await _openBluetooth();
-          // if (value) await _scanAndConnect(_autoConnectAddress!);
-          // break;
-      }
-    }else{
-      return false;
+    bool value = await locationPermission();
+    if(!value) return false;
+    BluetoothState state = await  FlutterBluetoothSerial.instance.state;
+    switch(state) {
+      case BluetoothState.STATE_ON :
+        return true;
+    // await _scanAndConnect(_autoConnectAddress!);
+    // break;
+      case BluetoothState.STATE_BLE_ON :
+        return true;
+    // await _scanAndConnect(_autoConnectAddress!);
+    // break;
+      default :
+        return await _openBluetooth();
+    // if (value) await _scanAndConnect(_autoConnectAddress!);
+    // break;
     }
   }
 
@@ -82,7 +81,7 @@ class BluetoothAutoconnectMobile{
   // }
 
   void scanAndConnect(String address)async{
-
+    setAutoConnectAddress = address;
     _streamSubscription = startDiscovery.listen((event) async {
       // final int discoveryIndex = _results.indexWhere((element) => element.device.address == event.device.address);
       // if(discoveryIndex < 0){
@@ -113,7 +112,32 @@ class BluetoothAutoconnectMobile{
     // }
   }
 
+  bool locationPermissionStatusChecker(LocationPermission permission){
+    switch(permission){
+      case LocationPermission.always :
+        return true;
+      case LocationPermission.whileInUse :
+        return true;
+      default :
+        return false;
+    }
+  }
+
   Future<void>connectDevice(String address)async{
     await BluetoothConnection.toAddressBLE(address);
+  }
+
+  Future<bool> locationPermission()async{
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if(!serviceEnabled) return false;
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    bool value = locationPermissionStatusChecker(permission);
+    if(!value){
+      permission = await Geolocator.requestPermission();
+      return locationPermissionStatusChecker(permission);
+    }else{
+      return true;
+    }
   }
 }
