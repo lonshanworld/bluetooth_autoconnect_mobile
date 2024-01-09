@@ -36,15 +36,23 @@ class BluetoothAutoconnectMobile extends ChangeNotifier{
     FlutterBluetoothSerial.instance.state.then((value) {
       print(value);
       _bluetoothState = value;
+      _openAllScan(value);
       notifyListeners();
     });
     FlutterBluetoothSerial.instance.onStateChanged().listen((event) {
       _bluetoothState = event;
       _getAddress();
       _getName();
+      _openAllScan(event);
       print(event);
       notifyListeners();
     });
+  }
+
+  void _openAllScan(BluetoothState state){
+    if(state == BluetoothState.STATE_ON){
+      discoverOtherDevice();
+    }
   }
 
   void _getAddress(){
@@ -114,6 +122,8 @@ class BluetoothAutoconnectMobile extends ChangeNotifier{
 
   void discoverOtherDevice(){
     _otherDeviceList.clear();
+    _bondedDeviceList.clear();
+    _connectedDeviceList.clear();
     _streamSubscription = FlutterBluetoothSerial.instance.startDiscovery().listen((event) {
       print(event);
       _checkOtherDevices(event);
@@ -149,8 +159,8 @@ class BluetoothAutoconnectMobile extends ChangeNotifier{
     if(value == true){
       _checkBondedDevices(result);
       notifyListeners();
-
     }
+    discoverOtherDevice();
   }
 
   Future<void> connectDevice(BluetoothDiscoveryResult result)async{
@@ -159,9 +169,10 @@ class BluetoothAutoconnectMobile extends ChangeNotifier{
       _checkConnectedDevices(result);
       notifyListeners();
     }
-
+    discoverOtherDevice();
     connection.input?.listen((event) {
       print(event);
     });
+
   }
 }

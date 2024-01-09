@@ -2,6 +2,7 @@ import 'package:bluetooth_autoconnect_mobile/bluetooth_autoconnect_mobile.dart';
 import 'package:bluetooth_autoconnect_mobile_example/widgets/bluetooth_result_box.dart';
 import 'package:bluetooth_autoconnect_mobile_example/widgets/cus_btn.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bluetooth_serial_ble/flutter_bluetooth_serial_ble.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -133,5 +134,6 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     context.read<BluetoothAutoconnectMobile>().initBluetoothService();
+
   }
 }
