@@ -13,12 +13,27 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final BluetoothAutoconnectMobile bluetoothAutoconnectMobile = BluetoothAutoconnectMobile();
 
+  @override
+  void initState(){
+    super.initState();
+    bluetoothAutoconnectMobile.setAutoConnectAddress = "02:3F:68:29:A4:01";
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp){
+      startConnect();
+    });
+  }
 
+  void startConnect()async{
+    bool value = await bluetoothAutoconnectMobile.requestPermissons();
+    if(value){
+      bluetoothAutoconnectMobile.scanAndConnect("02:3F:68:29:A4:01");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final BluetoothAutoconnectMobile bluetoothAutoconnectMobile = context.watch<BluetoothAutoconnectMobile>();
+
 
     return Scaffold(
       appBar: AppBar(
@@ -29,33 +44,7 @@ class _HomePageState extends State<HomePage> {
       body: ListView(
         scrollDirection: Axis.vertical,
         children: [
-          Text(bluetoothAutoconnectMobile.bluetoothState.toString()),
-          Text("my device name ${bluetoothAutoconnectMobile.name}"),
-          Text("my device address ${bluetoothAutoconnectMobile.address}"),
-          CusBtn(
-            "open bluetooth",
-            () {
-              context.read<BluetoothAutoconnectMobile>().openBluetooth();
-            },
-          ),
-          CusBtn(
-            "close bluetooth",
-                () {
-              context.read<BluetoothAutoconnectMobile>().closeBluetooth();
-            },
-          ),
-          CusBtn(
-            "open bluetooth setting",
-                () {
-              context.read<BluetoothAutoconnectMobile>().openSetting();
-            },
-          ),
-          CusBtn(
-            "request visibility",
-            () {
-              context.read<BluetoothAutoconnectMobile>().requestVisibility(60);
-            },
-          ),
+
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.2,
             width: double.maxFinite,
@@ -64,63 +53,8 @@ class _HomePageState extends State<HomePage> {
                 CusBtn(
                   "discover other device",
                   () {
-                    context.read<BluetoothAutoconnectMobile>().discoverOtherDevice();
+                    // o
                   },
-                ),
-                Expanded(
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: bluetoothAutoconnectMobile.otherDeviceList.map((e) => SingleChildScrollView(
-                      child: BluetoothResultBox(
-                        e,
-                        (){
-                          context.read<BluetoothAutoconnectMobile>().bondToDevice(e);
-                        }
-                      ),
-                    )).toList(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.2,
-            width: double.maxFinite,
-            child: Row(
-              children: [
-                Text("Bonded Devices"),
-                Expanded(
-                  child: Row(
-                    children: bluetoothAutoconnectMobile.bondedDeviceList.map((e) => SingleChildScrollView(
-                      child: BluetoothResultBox(
-                        e,
-                        (){
-                          context.read<BluetoothAutoconnectMobile>().connectDevice(e);
-                        }
-                      ),
-                    )).toList(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.2,
-            width: double.maxFinite,
-            child: Row(
-              children: [
-                Text("Connected Devices"),
-                Expanded(
-                  child: Row(
-                    children: bluetoothAutoconnectMobile.connectedDeviceList.map((e) => SingleChildScrollView(
-                      child: BluetoothResultBox(
-                          e,
-                          (){
-
-                          }
-                      ),
-                    )).toList(),
-                  ),
                 ),
               ],
             ),
@@ -130,10 +64,5 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    context.read<BluetoothAutoconnectMobile>().initBluetoothService();
 
-  }
 }

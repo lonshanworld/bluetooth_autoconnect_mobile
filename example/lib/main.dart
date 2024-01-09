@@ -1,8 +1,6 @@
-import 'package:bluetooth_autoconnect_mobile/bluetooth_autoconnect_mobile.dart';
 import 'package:bluetooth_autoconnect_mobile_example/pages/home_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,12 +19,9 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
 
-    return ChangeNotifierProvider<BluetoothAutoconnectMobile>(
-      create: (_) => BluetoothAutoconnectMobile(),
-      child: const MaterialApp(
-        debugShowCheckedModeBanner: kDebugMode,
-        home: HomePage(),
-      ),
+    return const MaterialApp(
+      debugShowCheckedModeBanner: kDebugMode,
+      home: HomePage(),
     );
   }
 }

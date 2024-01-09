@@ -1,178 +1,119 @@
 library bluetooth_autoconnect_mobile;
 
 import 'dart:async';
-
-import 'package:flutter/cupertino.dart';
+// "02:3F:68:29:A4:01"
 import 'package:flutter_bluetooth_serial_ble/flutter_bluetooth_serial_ble.dart';
 
 
-class BluetoothAutoconnectMobile extends ChangeNotifier{
+class BluetoothAutoconnectMobile{
   // Future<String?> getPlatformVersion() {
   //   return BluetoothAutoconnectMobilePlatform.instance.getPlatformVersion();
   // }
 
-  BluetoothState _bluetoothState = BluetoothState.UNKNOWN;
-  String _address = "...";
-  String _name = "...";
-  StreamSubscription<BluetoothDiscoveryResult>? _streamSubscription;
-  bool _isDiscovering = false;
-  final List<BluetoothDiscoveryResult> _otherDeviceList = List<BluetoothDiscoveryResult>.empty(growable: true);
-  final List<BluetoothDiscoveryResult> _bondedDeviceList = List<BluetoothDiscoveryResult>.empty(growable: true) ;
-  final List<BluetoothDiscoveryResult> _connectedDeviceList = List<BluetoothDiscoveryResult>.empty(growable: true);
-  // Timer? _discoverableTimeoutTimer;
-  // int _discoverableTimeoutSecondsLeft = 0;
-  // bool _autoAcceptPairingRequests = true;
+  BluetoothAutoconnectMobile._();
+  static final BluetoothAutoconnectMobile _instance = BluetoothAutoconnectMobile._();
+  factory BluetoothAutoconnectMobile() => _instance;
 
-  BluetoothState get bluetoothState => _bluetoothState;
-  String get address => _address;
-  String get name => _name;
-  StreamSubscription<BluetoothDiscoveryResult>? get bluetoothStream => _streamSubscription;
-  bool get isDiscovering => _isDiscovering;
-  List<BluetoothDiscoveryResult> get otherDeviceList => _otherDeviceList;
-  List<BluetoothDiscoveryResult> get bondedDeviceList => _bondedDeviceList;
-  List<BluetoothDiscoveryResult> get connectedDeviceList => _connectedDeviceList;
+  // Future<BluetoothState> get bluetoothState => FlutterBluetoothSerial.instance.state;
 
-  void initBluetoothService(){
-    FlutterBluetoothSerial.instance.state.then((value) {
-      print(value);
-      _bluetoothState = value;
-      _openAllScan(value);
-      notifyListeners();
-    });
-    FlutterBluetoothSerial.instance.onStateChanged().listen((event) {
-      _bluetoothState = event;
-      _getAddress();
-      _getName();
-      _openAllScan(event);
-      print(event);
-      notifyListeners();
-    });
+  String? _autoConnectAddress;
+  String? get autoConnectAddress => _autoConnectAddress;
+  set setAutoConnectAddress(String value) => _autoConnectAddress = value;
+
+  Future<List<BluetoothDevice>>bondedDeviceList = FlutterBluetoothSerial.instance.getBondedDevices();
+  Future<bool> bondToDevice(BluetoothDevice device)async{
+    bool? value = await FlutterBluetoothSerial.instance.bondDeviceAtAddress(device.address);
+    if(value == true) return true;
+    return false;
   }
 
-  void _openAllScan(BluetoothState state){
-    if(state == BluetoothState.STATE_ON){
-      discoverOtherDevice();
+  BluetoothDevice? _currentBluetoothDevice;
+  BluetoothDevice? get currentBluetoothDevice => _currentBluetoothDevice;
+
+  Future<int?> requestVisibility()async => await FlutterBluetoothSerial.instance.requestDiscoverable(80);
+  Stream<BluetoothDiscoveryResult> get startDiscovery => FlutterBluetoothSerial.instance.startDiscovery();
+
+  Stream<BluetoothState> get streamBluetoothState => FlutterBluetoothSerial.instance.onStateChanged();
+
+  Future<bool> _openBluetooth()async{
+    bool? value = await FlutterBluetoothSerial.instance.requestEnable();
+    if(value == true)return true;
+    return false;
+  }
+
+  Future<bool?> get closeBluetooth => FlutterBluetoothSerial.instance.requestDisable();
+  StreamSubscription<BluetoothDiscoveryResult>? _streamSubscription;
+
+
+  Future<bool> requestPermissons()async{
+    print("value of want to connect device $_autoConnectAddress");
+    if(_autoConnectAddress != null && _autoConnectAddress != ""){
+      BluetoothState state = await  FlutterBluetoothSerial.instance.state;
+      switch(state) {
+        case BluetoothState.STATE_ON :
+          return true;
+          // await _scanAndConnect(_autoConnectAddress!);
+          // break;
+        case BluetoothState.STATE_BLE_ON :
+          return true;
+          // await _scanAndConnect(_autoConnectAddress!);
+          // break;
+        default :
+          return await _openBluetooth();
+          // if (value) await _scanAndConnect(_autoConnectAddress!);
+          // break;
+      }
+    }else{
+      return false;
     }
   }
 
-  void _getAddress(){
-    FlutterBluetoothSerial.instance.address.then((value){
-      _address = value ?? "";
-      print("address $value");
-      notifyListeners();
-    });
-  }
-
-  void _getName(){
-    FlutterBluetoothSerial.instance.name.then((value){
-      _name = value ?? "";
-      print("name $value");
-      notifyListeners();
-    });
-  }
-
-  // void connectBluetooth()async{
-  //   BluetoothConnection connection = await BluetoothConnection.toAddress("");
-  //   connection.input?.listen((event) {
-  //     print(event);
+  // Future<void> _processStream()async{
+  //   _results.clear();
+  //   startDiscovery.listen((event) {
+  //     final int discoveryIndex = _results.indexWhere((element) => element.device.address == event.device.address);
+  //     if(discoveryIndex < 0){
+  //       _results.add(event);
+  //     }else{
+  //       _results[discoveryIndex] = event;
+  //     }
   //   });
+  //   await startDiscovery.drain();
   // }
 
-  Future<bool?> openBluetooth() => FlutterBluetoothSerial.instance.requestEnable();
+  void scanAndConnect(String address)async{
 
-  Future<bool?> closeBluetooth() => FlutterBluetoothSerial.instance.requestDisable();
-
-  Future<void> openSetting() => FlutterBluetoothSerial.instance.openSettings();
-
-  Future<int?> requestVisibility(int seconds)async => await FlutterBluetoothSerial.instance.requestDiscoverable(seconds);
-
-  @protected
-  void _checkOtherDevices(BluetoothDiscoveryResult result){
-    final int existIndex = _otherDeviceList.indexWhere((element) => element.device.address == result.device.address);
-    if(existIndex < 0){
-      _otherDeviceList.add(result);
-    }else{
-      _otherDeviceList[existIndex] = result;
-    }
-  }
-
-  @protected
-  void _checkBondedDevices(BluetoothDiscoveryResult result){
-    if(result.device.isBonded){
-      final int bondedIndex = _bondedDeviceList.indexWhere((element) => element.device.address == result.device.address);
-      if(bondedIndex < 0){
-        _bondedDeviceList.add(result);
-      }else{
-        _bondedDeviceList[bondedIndex] = result;
+    _streamSubscription = startDiscovery.listen((event) async {
+      // final int discoveryIndex = _results.indexWhere((element) => element.device.address == event.device.address);
+      // if(discoveryIndex < 0){
+      //   _results.add(event);
+      // }else{
+      //   _results[discoveryIndex] = event;
+      // }
+      if(event.device.address == address){
+        _streamSubscription?.cancel();
+        if(event.device.isBonded == true) {
+          await connectDevice(address);
+        }else{
+          bool value = await bondToDevice(event.device);
+          if(value) return await connectDevice(address);
+        }
       }
-    }
-  }
-
-  @protected
-  void _checkConnectedDevices(BluetoothDiscoveryResult result){
-    if(result.device.isConnected){
-      final int connectedIndex = _connectedDeviceList.indexWhere((element) => element.device.address == result.device.address);
-      if(connectedIndex < 0){
-        _connectedDeviceList.add(result);
-      }else{
-        _connectedDeviceList[connectedIndex] = result;
-      }
-    }
-  }
-
-  void discoverOtherDevice(){
-    _otherDeviceList.clear();
-    _bondedDeviceList.clear();
-    _connectedDeviceList.clear();
-    _streamSubscription = FlutterBluetoothSerial.instance.startDiscovery().listen((event) {
-      print(event);
-      _checkOtherDevices(event);
-      _checkBondedDevices(event);
-      _checkConnectedDevices(event);
-      notifyListeners();
     });
-    _streamSubscription?.onDone(() {
-      _isDiscovering = false;
-      print("on done");
-      notifyListeners();
-    });
-
-    _streamSubscription?.onError((obj, stackTrace){
-      _isDiscovering = false;
-      print("on error");
-      print(obj);
-      print(stackTrace);
-      notifyListeners();
-    });
+    // for (var element in _results) {
+    //   if(element.device.address == address){
+    //     if(element.device.isBonded == true) {
+    //       return await connectDevice(address);
+    //     }else{
+    //       bool value = await bondToDevice(element.device);
+    //       if(value) return await connectDevice(address);
+    //     }
+    //     break;
+    //   }
+    // }
   }
 
-  void cancelDiscoverStream(){
-    _streamSubscription?.cancel();
-  }
-
-  Future<void> bondToDevice(BluetoothDiscoveryResult result)async{
-    bool? value = await FlutterBluetoothSerial.instance.bondDeviceAtAddress(
-      result.device.address,
-    );
-
-    print("connection status $value");
-    if(value == true){
-      _checkBondedDevices(result);
-      notifyListeners();
-    }
-    discoverOtherDevice();
-  }
-
-  Future<void> connectDevice(BluetoothDiscoveryResult result)async{
-    BluetoothConnection connection = await BluetoothConnection.toAddress(result.device.address,type: ConnectionType.AUTO);
-    if(connection.isConnected){
-      _checkConnectedDevices(result);
-      notifyListeners();
-    }
-    discoverOtherDevice();
-    connection.input?.listen((event) {
-      print(event);
-    });
-
+  Future<void>connectDevice(String address)async{
+    await BluetoothConnection.toAddressBLE(address);
   }
 }
