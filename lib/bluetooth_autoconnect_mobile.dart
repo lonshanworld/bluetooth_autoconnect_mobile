@@ -17,8 +17,8 @@ class BluetoothAutoconnectMobile extends ChangeNotifier{
   StreamSubscription<BluetoothDiscoveryResult>? _streamSubscription;
   bool _isDiscovering = false;
   final List<BluetoothDiscoveryResult> _otherDeviceList = List<BluetoothDiscoveryResult>.empty(growable: true);
-  List<BluetoothDiscoveryResult> _bondedDeviceList = List<BluetoothDiscoveryResult>.empty(growable: true) ;
-  List<BluetoothDiscoveryResult> _connectedDeviceList = List<BluetoothDiscoveryResult>.empty(growable: true);
+  final List<BluetoothDiscoveryResult> _bondedDeviceList = List<BluetoothDiscoveryResult>.empty(growable: true) ;
+  final List<BluetoothDiscoveryResult> _connectedDeviceList = List<BluetoothDiscoveryResult>.empty(growable: true);
   // Timer? _discoverableTimeoutTimer;
   // int _discoverableTimeoutSecondsLeft = 0;
   // bool _autoAcceptPairingRequests = true;
