@@ -34,7 +34,7 @@ class BluetoothAutoconnectMobile{
   Future<int?> requestVisibility()async => await FlutterBluetoothSerial.instance.requestDiscoverable(80);
   Stream<BluetoothDiscoveryResult> get startDiscovery => FlutterBluetoothSerial.instance.startDiscovery();
 
-  Stream<BluetoothState> get streamBluetoothState => FlutterBluetoothSerial.instance.onStateChanged();
+  Stream<BluetoothState> get onStateChanged => FlutterBluetoothSerial.instance.onStateChanged();
 
   Future<bool> _openBluetooth()async{
     bool? value = await FlutterBluetoothSerial.instance.requestEnable();
@@ -48,8 +48,8 @@ class BluetoothAutoconnectMobile{
 
   Future<bool> requestPermissons()async{
     print("value of want to connect device $_autoConnectAddress");
-    bool value = await locationPermission();
-    if(!value) return false;
+    // bool value = await locationPermission();
+    // if(!value) return false;
     BluetoothState state = await  FlutterBluetoothSerial.instance.state;
     switch(state) {
       case BluetoothState.STATE_ON :
